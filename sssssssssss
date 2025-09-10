@@ -1,0 +1,96 @@
+local StarterGui = game:GetService("StarterGui")
+
+StarterGui:SetCore("SendNotification", {
+    Title = "Script loading...",
+    Text = "Loading Rumz Hub",
+    Duration = 8,
+})
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local isMobile = UserInputService.TouchEnabled
+local deviceType = isMobile and "Mobile" or "PC"
+
+local function createLoadingUI(deviceType)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "LoadingUI"
+    screenGui.ResetOnSpawn = false
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.4, 0, 0.2, 0)
+    frame.Position = UDim2.new(0.3, 0, 0.4, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(0.1)
+    uiCorner.Parent = frame
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0.3, 0)
+    title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 24
+    title.Text = "Rumz Hub Loading"
+    title.Parent = frame
+
+    local deviceText = Instance.new("TextLabel")
+    deviceText.Size = UDim2.new(1, 0, 0.2, 0)
+    deviceText.Position = UDim2.new(0, 0, 0.3, 0)
+    deviceText.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    deviceText.TextColor3 = Color3.fromRGB(150, 150, 150)
+    deviceText.Font = Enum.Font.Gotham
+    deviceText.TextSize = 18
+    deviceText.Text = "Device: " .. deviceType
+    deviceText.Parent = frame
+
+    local loadingBarBackground = Instance.new("Frame")
+    loadingBarBackground.Size = UDim2.new(0.8, 0, 0.15, 0)
+    loadingBarBackground.Position = UDim2.new(0.1, 0, 0.6, 0)
+    loadingBarBackground.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    loadingBarBackground.BorderSizePixel = 0
+    loadingBarBackground.Parent = frame
+
+    local bgCorner = Instance.new("UICorner")
+    bgCorner.CornerRadius = UDim.new(0.05)
+    bgCorner.Parent = loadingBarBackground
+
+    local loadingBar = Instance.new("Frame")
+    loadingBar.Size = UDim2.new(0, 0, 1, 0)
+    loadingBar.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    loadingBar.BorderSizePixel = 0
+    loadingBar.Parent = loadingBarBackground
+
+    local barCorner = Instance.new("UICorner")
+    barCorner.CornerRadius = UDim.new(0.05)
+    barCorner.Parent = loadingBar
+
+    screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    task.spawn(function()
+        loadingBar:TweenSize(UDim2.new(1, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 3, true)
+        task.wait(3)
+        screenGui:Destroy()
+    end)
+end
+
+createLoadingUI(deviceType)
+
+repeat until game:IsLoaded()
+local success, err = pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Nickcodes99999999/Shiny99995566/refs/heads/main/rumzhub.lua"))()
+end)
+
+if not success then
+    warn("Error loading Rumz Hub: " .. err)
+    StarterGui:SetCore("SendNotification", {
+        Title = "Error",
+        Text = "Failed to load Rumz Hub. Please try again later.",
+        Duration = 8,
+    })
+end
