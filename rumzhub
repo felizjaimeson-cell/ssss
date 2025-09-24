@@ -1,1 +1,143 @@
-print("Skids")
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local Window = WindUI:CreateWindow({
+    Title = "My Super Hub",
+    Icon = "door-open", -- lucide icon
+    Author = "by .ftgs and .ftgs",
+    Folder = "MySuperHub",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    User = {
+        Enabled = true,
+        Anonymous = true,
+        Callback = function()
+            print("clicked")
+        end,
+    },
+    
+})
+
+--// ESP Folder
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "ESPItems"
+ESPFolder.Parent = game.CoreGui
+
+--// Create ESP Billboard
+local function CreateESP(part, itemName, uniqueId)
+    local espName = itemName .. "_" .. tostring(uniqueId)
+    if ESPFolder:FindFirstChild(espName) then
+        ESPFolder[espName]:Destroy()
+    end
+
+    local bill = Instance.new("BillboardGui")
+    bill.Name = espName
+    bill.Adornee = part
+    bill.Size = UDim2.new(0, 100, 0, 30)
+    bill.AlwaysOnTop = true
+    bill.Parent = ESPFolder
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = itemName
+    label.TextColor3 = Color3.fromRGB(255, 0, 0)
+    label.TextStrokeTransparency = 0.5
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+    label.Parent = bill
+end
+
+--// Track items + update counts
+local ItemsFolder = workspace:FindFirstChild("Items", true)
+local ItemCounts = {} -- { [name] = count }
+local Dropdown -- forward declare
+
+-- Build dropdown values based on ItemCounts
+local function RefreshDropdown()
+    if not Dropdown then return end
+    local values = {}
+    for name, count in pairs(ItemCounts) do
+        if count > 1 then
+            table.insert(values, name .. " (x" .. count .. ")")
+        else
+            table.insert(values, name)
+        end
+    end
+    Dropdown:SetValues(values)
+end
+
+-- Add item
+local function AddItem(item)
+    if not item:IsA("BasePart") then return end
+    ItemCounts[item.Name] = (ItemCounts[item.Name] or 0) + 1
+    CreateESP(item, item.Name, item:GetDebugId()) -- use unique ID to avoid conflicts
+    RefreshDropdown()
+end
+
+-- Remove item
+local function RemoveItem(item)
+    if ItemCounts[item.Name] then
+        ItemCounts[item.Name] = ItemCounts[item.Name] - 1
+        if ItemCounts[item.Name] <= 0 then
+            ItemCounts[item.Name] = nil
+        end
+    end
+    -- Remove ESP tied to this part
+    local espName = item.Name .. "_" .. tostring(item:GetDebugId())
+    if ESPFolder:FindFirstChild(espName) then
+        ESPFolder[espName]:Destroy()
+    end
+    RefreshDropdown()
+end
+
+-- Initial ESP setup
+if ItemsFolder then
+    for _, item in ipairs(ItemsFolder:GetDescendants()) do
+        AddItem(item)
+    end
+
+    ItemsFolder.ChildAdded:Connect(AddItem)
+    ItemsFolder.ChildRemoved:Connect(RemoveItem)
+end
+
+----------------------------------------------------------------------
+-- UI PART (example using your Tab)
+----------------------------------------------------------------------
+
+Dropdown = Tab:Dropdown({
+    Title = "Items ESP",
+    Values = {}, -- filled dynamically
+    Multi = false,
+    AllowNone = true,
+    Callback = function(option)
+        print("Selected item: " .. tostring(option))
+    end
+})
+
+-- Toggle ESP visibility
+local Toggle = Tab:Toggle({
+    Title = "ESP",
+    Desc = "Enable/Disable ESP",
+    Icon = "bird",
+    Type = "Checkbox",
+    Default = true,
+    Callback = function(state)
+        for _, gui in ipairs(ESPFolder:GetChildren()) do
+            if gui:IsA("BillboardGui") then
+                gui.Enabled = state
+            end
+        end
+        print("ESP is now " .. (state and "ON" or "OFF"))
+    end
+})
+
+-- Refresh once at start
+RefreshDropdown()
